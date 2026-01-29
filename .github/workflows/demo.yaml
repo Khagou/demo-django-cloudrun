@@ -28,7 +28,7 @@ on:
 env:
   FAST_SERVICE_ACCOUNT: demo-django-cloudrun-cicd-rw@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_SERVICE_ACCOUNT_PLAN: demo-django-cloudrun-cicd-ro@kh-prod-iac-core-0.iam.gserviceaccount.com
-  FAST_WIF_PROVIDER: projects/754374235228/locations/global/workloadIdentityPools/github-pool
+  FAST_WIF_PROVIDER: projects/754374235228/locations/global/workloadIdentityPools/github-pool/providers/github
   SSH_AUTH_SOCK: /tmp/ssh_agent.sock
   TF_PROVIDERS_FILE: demo-django-cloudrun-providers.tf
   TF_PROVIDERS_FILE_PLAN: demo-django-cloudrun-ro-providers.tf
@@ -41,11 +41,6 @@ env:
 jobs:
   fast-pr:
     # Skip PRs which are closed without being merged.
-    if: >-
-      github.event.action == 'closed' &&
-      github.event.pull_request.merged == true ||
-      github.event.action == 'opened' ||
-      github.event.action == 'synchronize'
     permissions:
       contents: read
       id-token: write
@@ -124,17 +119,21 @@ jobs:
         name: Terraform init
         continue-on-error: true
         run: |
+          cd terraform
           terraform init -no-color
 
       - id: tf-validate
         continue-on-error: true
         name: Terraform validate
-        run: terraform validate -no-color
+        run: |
+          cd terraform
+          terraform validate -no-color
 
       - id: tf-bootstrap-ar
         if: github.event.pull_request.merged == true && success()
         name: Terraform apply (bootstrap Artifact Registry)
         run: |
+          cd terraform
           terraform apply -input=false -auto-approve -no-color \
             -target=google_project_service.services \
             -target=google_artifact_registry_repository.repo \
@@ -158,6 +157,7 @@ jobs:
         name: Terraform plan
         continue-on-error: true
         run: |
+          cd terraform
           terraform plan -input=false -out ../plan.out -no-color ${{env.plan_opts}} -var="image=${{ env.image }}"
 
       - id: tf-apply
@@ -165,6 +165,7 @@ jobs:
         name: Terraform apply
         continue-on-error: true
         run: |
+          cd terraform
           terraform apply -input=false -auto-approve -no-color ../plan.out -var="image=${{ env.image }}"
 
       # PR comment with Terraform result from previous steps
