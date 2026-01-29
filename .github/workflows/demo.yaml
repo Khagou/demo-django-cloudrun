@@ -26,6 +26,7 @@ on:
 
 
 env:
+  IMPERSONATE_SA: demo-django-cloudrun-rw@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_SERVICE_ACCOUNT: demo-django-cloudrun-cicd-rw@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_SERVICE_ACCOUNT_PLAN: demo-django-cloudrun-cicd-ro@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_WIF_PROVIDER: projects/754374235228/locations/global/workloadIdentityPools/github-pool/providers/github
@@ -143,7 +144,10 @@ jobs:
         if: github.event.pull_request.merged == true && success()
         name: Configure Docker auth for Artifact Registry
         run: |
-          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+          gcloud auth print-access-token \
+          --impersonate-service-account  ${{ env.IMPERSONATE_SA}} | docker login \
+          -u oauth2accesstoken \
+          --password-stdin https://${{ env.REGION }}-docker.pkg.dev --quiet
 
       - id: docker-build-push
         if: github.event.pull_request.merged == true && success()
