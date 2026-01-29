@@ -119,17 +119,21 @@ jobs:
         name: Terraform init
         continue-on-error: true
         run: |
+          cd terraform
           terraform init -no-color
 
       - id: tf-validate
         continue-on-error: true
         name: Terraform validate
-        run: terraform validate -no-color
+        run: |
+          cd terraform
+          terraform validate -no-color
 
       - id: tf-bootstrap-ar
         if: github.event.pull_request.merged == true && success()
         name: Terraform apply (bootstrap Artifact Registry)
         run: |
+          cd terraform
           terraform apply -input=false -auto-approve -no-color \
             -target=google_project_service.services \
             -target=google_artifact_registry_repository.repo \
@@ -153,6 +157,7 @@ jobs:
         name: Terraform plan
         continue-on-error: true
         run: |
+          cd terraform
           terraform plan -input=false -out ../plan.out -no-color ${{env.plan_opts}} -var="image=${{ env.image }}"
 
       - id: tf-apply
@@ -160,6 +165,7 @@ jobs:
         name: Terraform apply
         continue-on-error: true
         run: |
+          cd terraform
           terraform apply -input=false -auto-approve -no-color ../plan.out -var="image=${{ env.image }}"
 
       # PR comment with Terraform result from previous steps
