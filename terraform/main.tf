@@ -13,18 +13,17 @@ provider "google" {
   region  = var.region
 }
 
-resource "google_project_service" "services" {
-  for_each = toset([
-    "run.googleapis.com",
-    "artifactregistry.googleapis.com",
-    "iam.googleapis.com",
-  ])
-  service            = each.value
-  disable_on_destroy = false
-}
+# resource "google_project_service" "services" {
+#   for_each = toset([
+#     "run.googleapis.com",
+#     "artifactregistry.googleapis.com",
+#     "iam.googleapis.com",
+#   ])
+#   service            = each.value
+#   disable_on_destroy = false
+# }
 
 resource "google_artifact_registry_repository" "repo" {
-  depends_on    = [google_project_service.services]
   location      = var.region
   repository_id = var.repo_id
   format        = "DOCKER"
@@ -38,7 +37,7 @@ resource "google_service_account" "run_sa" {
 }
 
 resource "google_cloud_run_v2_service" "service" {
-  depends_on = [google_project_service.services, google_artifact_registry_repository.repo]
+  depends_on = [ google_artifact_registry_repository.repo]
 
   name     = var.service_name
   location = var.region
