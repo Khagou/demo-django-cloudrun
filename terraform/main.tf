@@ -13,15 +13,15 @@ provider "google" {
   region  = var.region
 }
 
-resource "google_project_service" "services" {
-  for_each = toset([
-    "run.googleapis.com",
-    "artifactregistry.googleapis.com",
-    "iam.googleapis.com",
-  ])
-  service            = each.value
-  disable_on_destroy = false
-}
+# resource "google_project_service" "services" {
+#   for_each = toset([
+#     "run.googleapis.com",
+#     "artifactregistry.googleapis.com",
+#     "iam.googleapis.com",
+#   ])
+#   service            = each.value
+#   disable_on_destroy = false
+# }
 
 resource "google_artifact_registry_repository" "repo" {
   depends_on    = [google_project_service.services]
