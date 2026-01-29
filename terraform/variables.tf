@@ -1,5 +1,6 @@
 variable "project_id" { 
-    type = string 
+    type = string
+    default = "gothic-guard-485708-c1"
 }
 variable "region" { 
     type = string  
