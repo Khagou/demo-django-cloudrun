@@ -170,7 +170,7 @@ jobs:
         continue-on-error: true
         run: |
           cd terraform
-          terraform apply -input=false -auto-approve -no-color ../plan.out -var="image=${{ env.image }}"
+          terraform apply -input=false -auto-approve -no-color -var="image=${{ env.image }}" ../plan.out 
 
       # PR comment with Terraform result from previous steps
       # length is checked and trimmed for length so as to stay within the limit
