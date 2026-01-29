@@ -101,11 +101,11 @@ jobs:
         name: Copy Terraform provider file
         run: |
           gcloud storage cp -r \
-            "gs://kh-prod-iac-core-0-iac-outputs/providers/${{env.provider_file}}" ./
+            "gs://kh-prod-iac-core-0-iac-outputs/providers/${{env.provider_file}}" ./terraform/
           gcloud storage cp -r \
-            "gs://kh-prod-iac-core-0-iac-outputs/tfvars/0-org-setup.auto.tfvars.json" ./
+            "gs://kh-prod-iac-core-0-iac-outputs/tfvars/0-org-setup.auto.tfvars.json" ./terraform/
           gcloud storage cp -r \
-            "gs://kh-prod-iac-core-0-iac-outputs/tfvars/0-globals.auto.tfvars.json" ./
+            "gs://kh-prod-iac-core-0-iac-outputs/tfvars/0-globals.auto.tfvars.json" ./terraform/s
 
       - id: tf-setup
         name: Set up Terraform
