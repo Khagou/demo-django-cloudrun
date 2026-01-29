@@ -34,7 +34,11 @@ resource "google_cloud_run_v2_service" "service" {
 
   template {
     service_account = google_service_account.run_sa.email
-
+    annotations = {
+      "run.googleapis.com/ingress"              = "internal-and-cloud-load-balancing"
+      "run.googleapis.com/vpc-access-egress"    = "all-traffic"
+      "run.googleapis.com/binary-authorization" = "default"
+    }
     containers {
       image = var.image
 
