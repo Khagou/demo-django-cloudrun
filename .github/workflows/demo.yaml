@@ -147,7 +147,7 @@ jobs:
           gcloud auth print-access-token \
           --impersonate-service-account  ${{ env.IMPERSONATE_SA}} | docker login \
           -u oauth2accesstoken \
-          --password-stdin https://${{ env.REGION }}-docker.pkg.dev --quiet
+          --password-stdin https://${{ env.REGION }}-docker.pkg.dev
 
       - id: docker-build-push
         if: github.event.pull_request.merged == true && success()
