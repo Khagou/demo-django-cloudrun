@@ -2,6 +2,7 @@ name: Deploy
 env:
   CODE_PROJET: 1590 
   IMPERSONATE_SA: demo-django-cloudrun-rw@kh-prod-iac-core-0.iam.gserviceaccount.com
+  IMPERSONATE_SA_PLAN: demo-django-cloudrun-ro@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_SERVICE_ACCOUNT: demo-django-cloudrun-cicd-rw@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_SERVICE_ACCOUNT_PLAN: demo-django-cloudrun-cicd-ro@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_WIF_PROVIDER: projects/754374235228/locations/global/workloadIdentityPools/github-pool/providers/github
@@ -13,6 +14,7 @@ env:
   REGION: europe-west1
   AR_REPO: demo
   SERVICE_NAME: django-demo
+  
 on:
   workflow_dispatch:
     inputs:
@@ -55,6 +57,8 @@ jobs:
           echo "plan_opts=-lock=false" >> "$GITHUB_ENV"
           echo "environment=${{inputs.environment}}" >> "$GITHUB_ENV"
           echo "service_account=${{env.FAST_SERVICE_ACCOUNT_PLAN}}" >> "$GITHUB_ENV"
+          echo "impersonate_service_account=${{env.IMPERSONATE_SA_PLAN}}" >> "$GITHUB_ENV"
+
 
       - id: vars-apply
         if: github.ref == 'refs/heads/main'
@@ -62,6 +66,7 @@ jobs:
         run: |
           echo "environment=${{inputs.environment}}" >> "$GITHUB_ENV"
           echo "service_account=${{env.FAST_SERVICE_ACCOUNT}}" >> "$GITHUB_ENV"
+          echo "impersonate_service_account=${{env.IMPERSONATE_SA}}" >> "$GITHUB_ENV"
 
 
 
@@ -86,7 +91,7 @@ jobs:
         run: |
             sed -i "s|<CODE_PROJET>|${CODE_PROJET}|g" provider.tf
             sed -i "s|<ENV>|${environment}|g" provider.tf
-            sed -i "s|<SA_NAME>|${IMPERSONATE_SA}|g" provider.tf
+            sed -i "s|<SA_NAME>|${impersonate_service_account}|g" provider.tf
 
       - id: debug-stage
         name: Debug Stage
