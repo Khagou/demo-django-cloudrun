@@ -85,8 +85,9 @@ jobs:
       - id: tf-config-provider
         name: Config Terraform provider file
         run: |
+            echo "environment=${{inputs.environment}}" >> "$GITHUB_ENV"
             sed -i "s|<CODE_PROJET>|${CODE_PROJET}|g" provider.tf
-            sed -i "s|<ENV>|${inputs.environment}|g" provider.tf
+            sed -i "s|<ENV>|${ENV}|g" provider.tf
             sed -i "s|<SA_NAME>|${GCP_VIEW}|g" provider.tf
 
 
