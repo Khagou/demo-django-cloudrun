@@ -19,3 +19,114 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - run: echo "Deploy sur ${{ inputs.environment }}"
+
+  fast-pr:
+    # Skip PRs which are closed without being merged.
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout repository
+        uses: actions/checkout@v4
+
+      # set up step variables for plan / apply
+
+      - id: vars-plan
+        if: github.event.pull_request.merged != true && success()
+        name: Set up plan variables
+        run: |
+          echo "plan_opts=-lock=false" >> "$GITHUB_ENV"
+          echo "provider_file=${{env.TF_PROVIDERS_FILE_PLAN}}" >> "$GITHUB_ENV"
+          echo "service_account=${{env.FAST_SERVICE_ACCOUNT_PLAN}}" >> "$GITHUB_ENV"
+
+      - id: vars-apply
+        if: github.event.pull_request.merged == true && success()
+        name: Set up apply variables
+        run: |
+          echo "provider_file=${{env.TF_PROVIDERS_FILE}}" >> "$GITHUB_ENV"
+          echo "service_account=${{env.FAST_SERVICE_ACCOUNT}}" >> "$GITHUB_ENV"
+
+
+
+      # set up authentication via Workload identity Federation and gcloud
+
+      - id: gcp-auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{env.FAST_WIF_PROVIDER}}
+          service_account: ${{env.service_account}}
+          access_token_lifetime: 900s
+
+      - id: gcp-sdk
+        name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: alpha
+
+      # copy provider file
+
+      - id: tf-config-provider
+        name: Copy Terraform provider file
+        run: |
+            - sed -i "s|<CODE_PROJET>|${CODE_PROJET}|g" provider.tf
+            - sed -i "s|<ENV>|${inputs.environment}|g" provider.tf
+            - sed -i "s|<SA_NAME>|${GCP_VIEW}|g" provider.tf
+
+
+      - id: tf-setup
+        name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{env.TF_VERSION}}
+
+      # run Terraform init/validate/plan
+
+      - id: tf-init
+        name: Terraform init
+        continue-on-error: true
+        run: |
+          cd terraform
+          terraform init -no-color
+
+      - id: tf-validate
+        continue-on-error: true
+        name: Terraform validate
+        run: |
+          cd terraform
+          terraform validate -no-color
+
+      - id: docker-auth
+        if: github.event.pull_request.merged == true && success()
+        name: Configure Docker auth for Artifact Registry
+        run: |
+          gcloud auth print-access-token \
+          --impersonate-service-account  ${{ env.IMPERSONATE_SA}} | docker login \
+          -u oauth2accesstoken \
+          --password-stdin https://${{ env.REGION }}-docker.pkg.dev
+
+      - id: docker-build-push
+        if: github.event.pull_request.merged == true && success()
+        name: Build & push Docker image
+        run: |
+          docker build -t "${{ env.image }}" .
+          docker push "${{ env.image }}"
+
+
+      - id: tf-plan
+        name: Terraform plan
+        continue-on-error: true
+        run: |
+          cd terraform
+          terraform plan -input=false -out ../plan.out -no-color ${{env.plan_opts}} -var="image=${{ env.image }}"
+
+      - id: tf-apply
+        name: Terraform apply
+        continue-on-error: true
+        run: |
+          cd terraform
+          terraform apply -input=false -auto-approve -no-color -var="image=${{ env.image }}" ../plan.out 
