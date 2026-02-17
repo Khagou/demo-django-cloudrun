@@ -83,11 +83,11 @@ jobs:
       # copy provider file
 
       - id: tf-config-provider
-        name: Copy Terraform provider file
+        name: Config Terraform provider file
         run: |
-            - sed -i "s|<CODE_PROJET>|${CODE_PROJET}|g" provider.tf
-            - sed -i "s|<ENV>|${inputs.environment}|g" provider.tf
-            - sed -i "s|<SA_NAME>|${GCP_VIEW}|g" provider.tf
+            sed -i "s|<CODE_PROJET>|${CODE_PROJET}|g" provider.tf
+            sed -i "s|<ENV>|${inputs.environment}|g" provider.tf
+            sed -i "s|<SA_NAME>|${GCP_VIEW}|g" provider.tf
 
 
       - id: tf-setup
