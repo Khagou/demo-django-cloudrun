@@ -48,18 +48,18 @@ jobs:
       # set up step variables for plan / apply
 
       - id: vars-plan
-        if: github.event.pull_request.merged != true && success()
+        if: github.ref == 'refs/heads/dev'
         name: Set up plan variables
         run: |
           echo "plan_opts=-lock=false" >> "$GITHUB_ENV"
-          echo "provider_file=${{env.TF_PROVIDERS_FILE_PLAN}}" >> "$GITHUB_ENV"
+          echo "environment=${{inputs.environment}}" >> "$GITHUB_ENV"
           echo "service_account=${{env.FAST_SERVICE_ACCOUNT_PLAN}}" >> "$GITHUB_ENV"
 
       - id: vars-apply
-        if: github.event.pull_request.merged == true && success()
+        if: github.ref == 'refs/heads/main'
         name: Set up apply variables
         run: |
-          echo "provider_file=${{env.TF_PROVIDERS_FILE}}" >> "$GITHUB_ENV"
+          echo "environment=${{inputs.environment}}" >> "$GITHUB_ENV"
           echo "service_account=${{env.FAST_SERVICE_ACCOUNT}}" >> "$GITHUB_ENV"
 
 
@@ -80,16 +80,21 @@ jobs:
         with:
           install_components: alpha
 
-      # copy provider file
-
       - id: tf-config-provider
         name: Config Terraform provider file
         run: |
-            echo "environment=${{inputs.environment}}" >> "$GITHUB_ENV"
             sed -i "s|<CODE_PROJET>|${CODE_PROJET}|g" provider.tf
             sed -i "s|<ENV>|${ENV}|g" provider.tf
-            sed -i "s|<SA_NAME>|${GCP_VIEW}|g" provider.tf
+            sed -i "s|<SA_NAME>|${IMPERSONATE_SA}|g" provider.tf
 
+      - id: debug-stage
+        name: Debug Stage
+        run: |
+            echo $ENV
+            cat provider.tf
+            echo $GCP_VIEW
+            echo $SERVICE_ACCOUNT
+            echo $IMPERSONATE_SA
 
       - id: tf-setup
         name: Set up Terraform
