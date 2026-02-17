@@ -1,5 +1,6 @@
 name: Deploy
 env:
+  CODE_PROJET: 1590 
   IMPERSONATE_SA: demo-django-cloudrun-rw@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_SERVICE_ACCOUNT: demo-django-cloudrun-cicd-rw@kh-prod-iac-core-0.iam.gserviceaccount.com
   FAST_SERVICE_ACCOUNT_PLAN: demo-django-cloudrun-cicd-ro@kh-prod-iac-core-0.iam.gserviceaccount.com
@@ -84,7 +85,7 @@ jobs:
         name: Config Terraform provider file
         run: |
             sed -i "s|<CODE_PROJET>|${CODE_PROJET}|g" provider.tf
-            sed -i "s|<ENV>|${ENV}|g" provider.tf
+            sed -i "s|<ENV>|${environment}|g" provider.tf
             sed -i "s|<SA_NAME>|${IMPERSONATE_SA}|g" provider.tf
 
       - id: debug-stage
