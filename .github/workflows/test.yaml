@@ -1,0 +1,21 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Env cible"
+        type: choice
+        required: true
+        options:
+          - dev
+          - qualif
+          - recette
+          - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - run: echo "Deploy sur ${{ inputs.environment }}"
